@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html><head><meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<meta content="ie=edge" http-equiv="x-ua-compatible">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>凝聚层的上同调 - 添加Sundown作为Hakyll的编译器</title>
+<link href="../../../assets/css/fonts.css" rel="stylesheet" type="text/css">
+<link href="../../../assets/css/default.css" rel="stylesheet" type="text/css">
+<link href="../../../assets/css/syntax.css" rel="stylesheet">
+<link href="../../../assets/css/styles/tomorrow-night-blue.css" rel="stylesheet">
+<script src="../../../assets/js/highlight.pack.js"></script>
+<script src="../../../assets/js/zepto.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</head>
+<body><div id="everything"><div id="header"><div id="logo"><a href="../../../">数字人生</a>
+</div>
+<div id="navigation"><a href="../../../">主页</a>
+<a href="../../../archive.html">归档</a>
+<a href="../../../tags/">分类</a>
+<a href="../../../about.html">关于</a>
+</div>
+</div>
+<div class="hyphenate" id="content"><h1>添加Sundown作为Hakyll的编译器</h1>
+<div class="info">
+    Posted on August 29, 2017
+    
+</div>
+<div class="info">
+    
+        分类: <a href="../../../tags/hakyll/">hakyll</a>, <a href="../../../tags/sundown/">sundown</a>
+    
+</div>
+<div class="info">
+    
+</div>
+
+<p><a href="https://jaspervdj.be/hakyll/">Hakyll</a> 是一个静态博客工具库<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>，得益于Haskell强大的生态和简洁健壮的代码风格，可以轻松地制作出功能强大的博客生成器。</p>
+<p><a href="https://github.com/vmg/sundown">Sundown</a> 是C语言实现， 号称是 <strong>忠于标准</strong>，<strong>快速</strong>，<strong>安全</strong> 的, 用来渲染Markdown到Html代码的工具库。</p>
+<p>Hakyll默认提供了很多编译器<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>(<a href="https://hackage.haskell.org/package/hakyll-4.9.8.0/docs/Hakyll-Core-File.html#v:copyFileCompiler">copyFileCompiler</a>, <a href="https://hackage.haskell.org/package/hakyll-4.9.8.0/docs/Hakyll-Web-Pandoc.html#v:pandocCompiler">pandocCompiler</a>…), 本文通过将sundown作为编译器整合进hakyll来了解如何给hakyll添加自定义的编译函数。</p>
+<p>我们需要以下的函数：</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="ot">sundownCompiler ::</span> <span class="dt">Compiler</span> (<span class="dt">Item</span> <span class="dt">String</span>)</a></code></pre></div>
+<p>Haskell的sundown绑定， 提供以下的函数用于渲染Markdown文档:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="ot">renderHtml ::</span> <span class="dt">Extensions</span> <span class="ot">-&gt;</span> <span class="dt">HtmlRenderMode</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">String</span> <span class="ot">-&gt;</span> <span class="dt">String</span></a></code></pre></div>
+<p>所以在Hakyll项目中增加两个函数:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode numberSource haskell numberLines"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1"><span class="kw">import</span> <span class="dt">Hakyll</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2"><span class="kw">import</span> <span class="dt">Text.Sundown.Html.String</span></a>
+<a class="sourceLine" id="cb3-3" data-line-number="3"></a>
+<a class="sourceLine" id="cb3-4" data-line-number="4"><span class="ot">sundownCompiler ::</span> <span class="dt">Compiler</span> (<span class="dt">Item</span> <span class="dt">String</span>)</a>
+<a class="sourceLine" id="cb3-5" data-line-number="5">sundownCompiler <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-6" data-line-number="6">    sundownCompilerWith allExtensions noHtmlModes <span class="dt">True</span> <span class="dt">Nothing</span></a>
+<a class="sourceLine" id="cb3-7" data-line-number="7"></a>
+<a class="sourceLine" id="cb3-8" data-line-number="8"><span class="ot">sundownCompilerWith ::</span> <span class="dt">Extensions</span> <span class="ot">-&gt;</span> <span class="dt">HtmlRenderMode</span> <span class="ot">-&gt;</span> <span class="dt">Bool</span> <span class="ot">-&gt;</span> <span class="dt">Maybe</span> <span class="dt">Int</span> <span class="ot">-&gt;</span> <span class="dt">Compiler</span> (<span class="dt">Item</span> <span class="dt">String</span>)</a>
+<a class="sourceLine" id="cb3-9" data-line-number="9">sundownCompilerWith ext mode bool n <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-10" data-line-number="10">    getResourceBody <span class="co">-- Compiler (Item String)</span></a>
+<a class="sourceLine" id="cb3-11" data-line-number="11">        <span class="fu">&gt;&gt;=</span> pure <span class="fu">.</span> readerHtml ext mode bool n <span class="fu">.</span> itemBody</a>
+<a class="sourceLine" id="cb3-12" data-line-number="12">        <span class="fu">&gt;&gt;=</span> makeItem</a></code></pre></div>
+<p>主要是使用 getResourceBody, makeItem 作为Hakyll内容的流入和流出， 中间的过程来做文档的渲染。</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>不同于jekyll, hexo之类的静态博客生成器，Hakyll是用来制作这类工具的工具库。<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>签名为: compiler :: Compiler (Item a)<a href="#fnref2" class="footnote-back">↩</a></p></li>
+</ol>
+</section>
+</div>
+<div id="footer">Powered by
+<a href="http://jaspervdj.be/hakyll">Hakyll</a>
+<a href="../../../atom.xml" style="text-decoration:none;"><img alt="atom" src="../../../assets/images/feed.svg" style="width:13px;position:relative;top:2px;">
+</a>
+<a href="https://github.com/uuhan" target="blank" style="text-decoration:none;"><img alt="github" src="../../../assets/images/github.svg" style="width:14px;position:relative;top:2px;">
+</a>
+</div>
+</div>
+</body>
+</html>

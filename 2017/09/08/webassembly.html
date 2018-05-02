@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html><head><meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<meta content="ie=edge" http-equiv="x-ua-compatible">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>凝聚层的上同调 - WebAssembly介绍</title>
+<link href="../../../assets/css/fonts.css" rel="stylesheet" type="text/css">
+<link href="../../../assets/css/default.css" rel="stylesheet" type="text/css">
+<link href="../../../assets/css/syntax.css" rel="stylesheet">
+<link href="../../../assets/css/styles/tomorrow-night-blue.css" rel="stylesheet">
+<script src="../../../assets/js/highlight.pack.js"></script>
+<script src="../../../assets/js/zepto.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</head>
+<body><div id="everything"><div id="header"><div id="logo"><a href="../../../">数字人生</a>
+</div>
+<div id="navigation"><a href="../../../">主页</a>
+<a href="../../../archive.html">归档</a>
+<a href="../../../tags/">分类</a>
+<a href="../../../about.html">关于</a>
+</div>
+</div>
+<div class="hyphenate" id="content"><h1>WebAssembly介绍</h1>
+<div class="info">
+    Posted on September  8, 2017
+    
+</div>
+<div class="info">
+    
+        分类: <a href="../../../tags/%E5%89%8D%E7%AB%AF/">前端</a>, <a href="../../../tags/webassembly/">webassembly</a>
+    
+</div>
+<div class="info">
+    
+</div>
+
+<h3 id="什么是webassembly0">什么是WebAssembly<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>?</h3>
+<p>WebAssembly是浏览器里的汇编语言，它本身有 <strong>二进制</strong> 和 <strong>文本</strong><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> 两种表达方式，类似于机器码和汇编代码。 同时很多通用编程语言，比如<strong>C/C++</strong>,<strong>Rust</strong>,<strong>TypeScript</strong>都可以编译到wasm。</p>
+<p>wasm具有近乎原生的执行效率，所以在比较耗时的前端任务，比如 <strong>WebGL</strong> 动画，加解密，核心算法实现等方面可以带来一定的性能提升。 同时其二进制的文件格式，也能一定程度上起到保护前端代码的作用<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>。</p>
+<p>处于安全方面的考虑，wasm中的代码访问的内存空间比较特殊。 代码不直接访问系统分配的内存，而是映射到js的一个ArrayBuffer对象中。</p>
+<h3 id="如何使用webassembly">如何使用WebAssembly?</h3>
+<p>最新的现代浏览器基本都支持<a href="#fn4" class="footnote-ref" id="fnref4"><sup>4</sup></a>。现在使用wasm需要以下的工具链：</p>
+<ol type="1">
+<li><p>emscripten, 基于LLVM低级虚拟机，可以将llvm bytecode编译到wasm</p></li>
+<li><p>wabt, wasm二进制工具</p></li>
+<li><p>binaryen， 编译器和工具链基础包</p></li>
+</ol>
+<p>由于wasm还处于实验阶段，其调用还需要依赖js。未来可能会引入浏览器原生的wasm支持。可以用以下方式调用wasm代码:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource javascript numberLines"><code class="sourceCode javascript"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">const</span> memory <span class="op">=</span> <span class="kw">new</span> <span class="va">WebAssembly</span>.<span class="at">Memory</span>(<span class="op">{</span> <span class="dt">initial</span><span class="op">:</span> <span class="dv">256</span><span class="op">,</span> <span class="dt">maximum</span><span class="op">:</span> <span class="dv">256</span><span class="op">}</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb1-3" data-line-number="3"><span class="at">fetch</span>(<span class="st">'some.wasm'</span>).<span class="at">then</span>(response <span class="op">=&gt;</span></a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">  <span class="va">response</span>.<span class="at">arrayBuffer</span>()</a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">).<span class="at">then</span>(bytes <span class="op">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6"></a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">  <span class="kw">var</span> imports <span class="op">=</span> <span class="op">{};</span></a>
+<a class="sourceLine" id="cb1-8" data-line-number="8">  <span class="va">imports</span>.<span class="at">env</span> <span class="op">=</span> <span class="op">{};</span></a>
+<a class="sourceLine" id="cb1-9" data-line-number="9">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">STACKTOP</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-10" data-line-number="10">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">STACK_MAX</span> <span class="op">=</span> <span class="dv">100</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-11" data-line-number="11">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">abortStackOverflow</span> <span class="op">=</span> <span class="kw">function</span>(e) <span class="op">{</span> <span class="va">console</span>.<span class="at">log</span>(<span class="st">'stack overflow: '</span><span class="op">,</span> e)<span class="op">};</span></a>
+<a class="sourceLine" id="cb1-12" data-line-number="12">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">memory</span> <span class="op">=</span> memory <span class="co">// 代码内存空间</span></a>
+<a class="sourceLine" id="cb1-13" data-line-number="13">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">memoryBase</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-14" data-line-number="14">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">table</span> <span class="op">=</span> <span class="kw">new</span> <span class="va">WebAssembly</span>.<span class="at">Table</span>(<span class="op">{</span> <span class="dt">initial</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">maximum</span><span class="op">:</span> <span class="dv">0</span><span class="op">,</span> <span class="dt">element</span><span class="op">:</span> <span class="st">'anyfunc'</span><span class="op">}</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb1-15" data-line-number="15">  <span class="va">imports</span>.<span class="va">env</span>.<span class="at">tableBase</span> <span class="op">=</span> <span class="dv">0</span><span class="op">;</span></a>
+<a class="sourceLine" id="cb1-16" data-line-number="16"></a>
+<a class="sourceLine" id="cb1-17" data-line-number="17">  <span class="cf">return</span> <span class="va">WebAssembly</span>.<span class="at">instantiate</span>(bytes<span class="op">,</span> imports)<span class="op">;</span> <span class="co">// 初始化wasm代码</span></a>
+<a class="sourceLine" id="cb1-18" data-line-number="18"></a>
+<a class="sourceLine" id="cb1-19" data-line-number="19"><span class="op">}</span>).<span class="at">then</span>(module <span class="op">=&gt;</span> <span class="op">{</span></a>
+<a class="sourceLine" id="cb1-20" data-line-number="20"></a>
+<a class="sourceLine" id="cb1-21" data-line-number="21">  exports <span class="op">=</span> <span class="va">module</span>.<span class="va">instance</span>.<span class="at">exports</span><span class="op">;</span> <span class="co">// 导出函数接口</span></a>
+<a class="sourceLine" id="cb1-22" data-line-number="22">  <span class="co">// 调用接口</span></a>
+<a class="sourceLine" id="cb1-23" data-line-number="23"></a>
+<a class="sourceLine" id="cb1-24" data-line-number="24"><span class="op">}</span>)</a></code></pre></div>
+<h3 id="演示实例">演示实例</h3>
+<p>两个演示wasm使用的例子</p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>维基百科: <a href="https://zh.wikipedia.org/wiki/WebAssembly">WebAssembly</a><a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>一种类似于lisp的 <strong>s-表达式</strong>，下面会提到<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>二进制形式可以通过工具“反汇编”成s-表达式<a href="#fnref3" class="footnote-back">↩</a></p></li>
+<li id="fn4"><p>参考：http://caniuse.com/#feat=wasm<a href="#fnref4" class="footnote-back">↩</a></p></li>
+</ol>
+</section>
+</div>
+<div id="footer">Powered by
+<a href="http://jaspervdj.be/hakyll">Hakyll</a>
+<a href="../../../atom.xml" style="text-decoration:none;"><img alt="atom" src="../../../assets/images/feed.svg" style="width:13px;position:relative;top:2px;">
+</a>
+<a href="https://github.com/uuhan" target="blank" style="text-decoration:none;"><img alt="github" src="../../../assets/images/github.svg" style="width:14px;position:relative;top:2px;">
+</a>
+</div>
+</div>
+</body>
+</html>

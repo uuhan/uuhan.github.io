@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+    <title>数字人生</title>
+    <link href="https://blog.uuhan.me/atom.xml" rel="self" />
+    <link href="https://blog.uuhan.me" />
+    <id>https://blog.uuhan.me/atom.xml</id>
+    <author>
+        <name>MinHui, Xu</name>
+        <email>xuminhui_jia@126.com</email>
+    </author>
+    <updated>2017-09-08T00:00:00Z</updated>
+    <entry>
+    <title>WebAssembly介绍</title>
+    <link href="https://blog.uuhan.me/2017/09/08/webassembly.html" />
+    <id>https://blog.uuhan.me/2017/09/08/webassembly.html</id>
+    <published>2017-09-08T00:00:00Z</published>
+    <updated>2017-09-08T00:00:00Z</updated>
+    <summary type="html"><![CDATA[This is uuhan's post on his blog.]]></summary>
+</entry>
+<entry>
+    <title>PureScript入门教程</title>
+    <link href="https://blog.uuhan.me/2017/09/02/purescript-by-example.html" />
+    <id>https://blog.uuhan.me/2017/09/02/purescript-by-example.html</id>
+    <published>2017-09-02T00:00:00Z</published>
+    <updated>2017-09-02T00:00:00Z</updated>
+    <summary type="html"><![CDATA[This is uuhan's post on his blog.]]></summary>
+</entry>
+<entry>
+    <title>添加Sundown作为Hakyll的编译器</title>
+    <link href="https://blog.uuhan.me/2017/08/29/add-sundown-compiler-to-hakyll.html" />
+    <id>https://blog.uuhan.me/2017/08/29/add-sundown-compiler-to-hakyll.html</id>
+    <published>2017-08-29T00:00:00Z</published>
+    <updated>2017-08-29T00:00:00Z</updated>
+    <summary type="html"><![CDATA[This is uuhan's post on his blog.]]></summary>
+</entry>
+<entry>
+    <title>The Test Post</title>
+    <link href="https://blog.uuhan.me/2017/08/20/first.html" />
+    <id>https://blog.uuhan.me/2017/08/20/first.html</id>
+    <published>2017-08-20T00:00:00Z</published>
+    <updated>2017-08-20T00:00:00Z</updated>
+    <summary type="html"><![CDATA[This is uuhan's post on his blog.]]></summary>
+</entry>
+
+</feed>

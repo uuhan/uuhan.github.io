@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html><head><meta content="text/html; charset=UTF-8" http-equiv="Content-Type">
+<meta content="ie=edge" http-equiv="x-ua-compatible">
+<meta content="width=device-width, initial-scale=1" name="viewport">
+<title>凝聚层的上同调 - PureScript入门教程</title>
+<link href="../../../assets/css/fonts.css" rel="stylesheet" type="text/css">
+<link href="../../../assets/css/default.css" rel="stylesheet" type="text/css">
+<link href="../../../assets/css/syntax.css" rel="stylesheet">
+<link href="../../../assets/css/styles/tomorrow-night-blue.css" rel="stylesheet">
+<script src="../../../assets/js/highlight.pack.js"></script>
+<script src="../../../assets/js/zepto.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
+</head>
+<body><div id="everything"><div id="header"><div id="logo"><a href="../../../">数字人生</a>
+</div>
+<div id="navigation"><a href="../../../">主页</a>
+<a href="../../../archive.html">归档</a>
+<a href="../../../tags/">分类</a>
+<a href="../../../about.html">关于</a>
+</div>
+</div>
+<div class="hyphenate" id="content"><h1>PureScript入门教程</h1>
+<div class="info">
+    Posted on September  2, 2017
+    
+</div>
+<div class="info">
+    
+        分类: <a href="../../../tags/%E7%BF%BB%E8%AF%91/">翻译</a>, <a href="../../../tags/purescript/">purescript</a>
+    
+</div>
+<div class="info">
+    
+      原文: <a href="https://leanpub.com/purescript/read#leanpub-auto-runtime-data-representation">https://leanpub.com/purescript/read#leanpub-auto-runtime-data-representation</a>
+    
+</div>
+
+<h3 id="介绍">1. 介绍</h3>
+<h4 id="函数式javascript">1.1 函数式JavaScript</h4>
+<p>函数式编程技术已经在JavaScript中出现有一段时间了:</p>
+<ul>
+<li>例如<a href="http://underscorejs.org/">UnderScoreJS</a>之类的库允许开发者使用经测试被信任的，诸如 <strong>map</strong>, <strong>filter</strong> 和 <strong>reduce</strong> 之类的函数的组合， 将小段的程序拼接成更大的程序:</li>
+</ul>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource javascript numberLines"><code class="sourceCode javascript"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">var</span> sumOfPrimes <span class="op">=</span></a>
+<a class="sourceLine" id="cb1-2" data-line-number="2">      <span class="va">_</span>.<span class="at">chain</span>(<span class="va">_</span>.<span class="at">range</span>(<span class="dv">1000</span>))</a>
+<a class="sourceLine" id="cb1-3" data-line-number="3">       .<span class="at">filter</span>(isPrime)</a>
+<a class="sourceLine" id="cb1-4" data-line-number="4">       .<span class="at">reduce</span>(<span class="kw">function</span>(x<span class="op">,</span> y) <span class="op">{</span></a>
+<a class="sourceLine" id="cb1-5" data-line-number="5">          <span class="cf">return</span> x <span class="op">+</span> y<span class="op">;</span></a>
+<a class="sourceLine" id="cb1-6" data-line-number="6">       <span class="op">}</span>)</a>
+<a class="sourceLine" id="cb1-7" data-line-number="7">       .<span class="at">value</span>()<span class="op">;</span></a></code></pre></div>
+<ul>
+<li>NodeJS中的异步编程大量依赖作为第一类对象的 <strong>函数</strong> 定义回调:</li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource javascript numberLines"><code class="sourceCode javascript"><a class="sourceLine" id="cb2-1" data-line-number="1"><span class="at">require</span>(<span class="st">'fs'</span>).<span class="at">readFile</span>(sourceFile<span class="op">,</span> <span class="kw">function</span> (error<span class="op">,</span> data) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-2" data-line-number="2">  <span class="cf">if</span> (<span class="op">!</span>error) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-3" data-line-number="3">        <span class="at">require</span>(<span class="st">'fs'</span>).<span class="at">writeFile</span>(deskFile<span class="op">,</span> data<span class="op">,</span> <span class="kw">function</span> (error) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-4" data-line-number="4">          <span class="cf">if</span> (<span class="op">!</span>error) <span class="op">{</span></a>
+<a class="sourceLine" id="cb2-5" data-line-number="5">            <span class="va">console</span>.<span class="at">log</span>(<span class="st">&quot;File copied&quot;</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb2-6" data-line-number="6">          <span class="op">}</span></a>
+<a class="sourceLine" id="cb2-7" data-line-number="7">        <span class="op">}</span>)<span class="op">;</span></a>
+<a class="sourceLine" id="cb2-8" data-line-number="8">  <span class="op">}</span></a>
+<a class="sourceLine" id="cb2-9" data-line-number="9"><span class="op">}</span>)<span class="op">;</span></a></code></pre></div>
+<ul>
+<li>诸如 <a href="http://facebook.github.io/react/">React</a> 和 <a href="https://github.com/Matt-Esch/virtual-dom">virtual-dom</a> 之类的库将视图模拟为应用状态的函数.</li>
+</ul>
+<p>函数激活了一种能够带来极大生产效率的抽象形式。然而，JavaScript中的函数式编程也有它的缺点: JavaScript是冗长的，未类型化的，并且缺少强有力的抽象形式。随意的JavaScript代码同样让等式推导变得十分困难。</p>
+<p>PureScript 是一门致力于解决这些问题的编程语言。 它拥有轻量的语法, 允许我们写出富有表达力的代码的同时保持代码清晰和可读。 它使用了丰富的类型系统来支撑其强力的抽象能力。 它也同时能生成快速，能被理解的代码，这一点当需要和JavaScript或其他编译到JavaScript的语言相互操作的时候显得很重要。总而言之，我希望能让你相信，PureScript在纯函数式编程理论上的威力和JavaScript灵巧的编程风格之间的平衡点。</p>
+<h4 id="类型和类型推导">1.2 类型和类型推导</h4>
+<p>关于静态类型语言和动态类型语言的争论已经是老生常谈的话题了。 PureScript是一种 <em>静态类型</em> 的语言，即，一个正确程序可以被编译器附上一个表明它的行为的类型。 反之，不能被确定其类型的程序是 <em>不正确的程序</em>，同时也会被编译器拒绝。 在PureScript中，不像动态类型语言，类型只存在于 <em>编译期</em>，不会在运行时表现。</p>
+<p>需要注意的是，PureScript中的类型和你在其他语言，如Java或C#中的类型不一样。 但是它们在某种意义上都都服务于同一个目的，PureScript的类型受像ML和Haskell之类的语言启发。 PureScript的类型是富有表现力的，它允许开发者给他们的程序下很强的断言。 最重要的是，PureScript的类型系统支持 <em>类型推导</em> - 它比其他的语言需要更少的显式类型标注，使得类型系统成为一个 <em>工具</em>而不是编程的阻力。 举一个简单的例子，下面的代码定义了一个 <em>数字</em>，但是并没有在代码的任何其他地方提到它是 <em>Number</em> 类型的:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb3-1" data-line-number="1">iAmANumber <span class="fu">=</span></a>
+<a class="sourceLine" id="cb3-2" data-line-number="2">    <span class="kw">let</span> square x <span class="fu">=</span> x <span class="fu">*</span> x</a>
+<a class="sourceLine" id="cb3-3" data-line-number="3">    <span class="kw">in</span> square <span class="fl">42.0</span></a></code></pre></div>
+<p>一个更加复杂的例子演示了类型正确在没有类型注释的时候也能被保证，甚至存在 <em>编译器都不识别</em> 的类型:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb4-1" data-line-number="1">iterate f <span class="dv">0</span> x <span class="fu">=</span> x</a>
+<a class="sourceLine" id="cb4-2" data-line-number="2">iterate f n x <span class="fu">=</span> iterate f (n <span class="fu">-</span> <span class="dv">1</span>) (f x)</a></code></pre></div>
+<p>这里，<em>x</em> 的类型是未知的，但是编译器还是可以验证 <em>iterate</em> 遵守了类型系统的规则，不管 <em>x</em> 具有什么类型。</p>
+<p>在本书中，我将尝试使你相信（或使你再次确信），静态类型不仅是让你相信你的程序正确的方式，同时也是帮助开发正确程序的手段。<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> 不使用最简单的抽象的话，重构一段大型的JavaScript代码可能是很困难的，但是当一个富有表达能力的类型系统加上一个类型检查器却能让重构变成令人享受的交互经历。</p>
+<p>另外，类型系统提供的安全保障同时也使更高级的抽象形式成为可能。事实上，PureScript提供了一个强力的基于类型驱动的抽象方式: <em>类型类</em>，这在函数式编程语言Haskell中很流行。</p>
+<h4 id="多语言的网络编程1">1.3 多语言的网络编程<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a></h4>
+<p>函数式编程有它成功的故事 - 它取得成功的应用领域：譬如数据分析，解析，编译器实现，泛型编程，并行编程。</p>
+<p>使用像PureScript这样的函数式编程语言来开发端到端的应用是可能的。 PureScript通过赋予Javascript语言的值和函数对应的类型，然后在PureScript代码中使用这些函数，提供了导入现存的JavaScript库的能力。 我们将在本书的后面看到这种方法。</p>
+<p>尽管PureScript其中一个能力是和其他编译到JavaScript的语言交互, 你也可以在你的项目里面部分使用PureScript，同时使用一种或多种其他的语言写剩下的JavaScript代码。</p>
+<p>这里有一些例子：</p>
+<ul>
+<li>核心的逻辑使用PureScript写，用户界面使用JavaScript。</li>
+<li>使用JavaScript或者编译到JS的语言写的应用，使用PureScript写测试。</li>
+<li>使用PureScript做用户界面自动化测试。</li>
+</ul>
+<p>在本书中，我们将关注如何使用PureScript解决小型的问题。解决方法可以被集成进更大的应用中去，同时我们也将看看如何从JavaScript调用PureScript或者反之。</p>
+<h4 id="准备">1.4 准备</h4>
+<p>本书需要用到的软件很少：第一章将会指导你从头建立开发环境，我们将使用的工具在绝大多数现代操作系统中都是能获取到的。</p>
+<p>PureScript编译器本身可以下载二进制发布的，也可以在任何安装有最新的GHC Haskell编译器的操作系统上编译源码安装，我们将在下一章节中介绍。</p>
+<p>本书代码使用 <strong>0.11.*</strong> 版本的PureScript编译。</p>
+<h4 id="关于读者">1.5 关于读者</h4>
+<p>我将假设你熟悉JavaScript的基本用法。如果你希望做一些符合自己需求的定制，熟悉任何JavaScript生态常用的工具，比如NPM和Gulp，都很有帮助，但是这些知识都不是必须的。</p>
+<p>不需要提前了解函数式编程的知识，但是多多益善。我们会从每个实例中得出新的概念，所以你需要能够对我们将使用的一些函数式编程的概念形成一些直觉上的知识。</p>
+<p>对Haskell编程语言熟悉的读者，将会看到大量相同的概念和语法，因为PureScript很大程度上受Haskell影响。 但是这些读者应该意识到这两者之间存在着很多重要的差异性。 不必要总是试图将一种语言的想法套到另一种语言上，尽管这里很多的概念在Haskell中都能得到一些解释。</p>
+<h4 id="如何阅读本书">1.6 如何阅读本书</h4>
+<p>本书的章节内容大部分都是不需要引用外部资源的。对于没有函数式编程经验的初学者也能得到很好的建议，但是需要按照顺序阅读。 开始的几章是接下来章节的基础。对于有丰富函数式编程经验（特别是有强类型语言比如ML和Haskell经验的读者），可以跳过这些章节。</p>
+<p>每一章都会有一个单独的实例，作为接下来介绍新的概念的动机。每一章的代码都能从本书的 <a href="https://github.com/paf31/purescript-book">GitHub仓库</a> 中获取。 一些章节会包含从代码库摘取的代码片段，但是为了有完整的理解，你应该跟着材料阅读代码库里面完整的代码。 更长的章节会包含更短的代码片段，你可以在交互模式的PSCi中测试一下验证你的理解。</p>
+<p>代码例子会用等宽字体显示，比如：</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode haskell"><code class="sourceCode haskell"><a class="sourceLine" id="cb5-1" data-line-number="1"><span class="kw">module</span> <span class="dt">Example</span> <span class="kw">where</span></a>
+<a class="sourceLine" id="cb5-2" data-line-number="2"></a>
+<a class="sourceLine" id="cb5-3" data-line-number="3"><span class="kw">import</span> <span class="dt">Control.Monad.Eff.Console</span> (log)</a>
+<a class="sourceLine" id="cb5-4" data-line-number="4"></a>
+<a class="sourceLine" id="cb5-5" data-line-number="5">main <span class="fu">=</span> log <span class="st">&quot;Hello, World!&quot;</span></a></code></pre></div>
+<p>需要在命令行输入的命令，会带上一个前置的 $ 符号：</p>
+<pre class="shell"><code>$ pulp build</code></pre>
+<p>通常情况下，这些命令都是针对 Linux/Mac OS 用户的，Windows 用户可能需要做一些小调整比如改变文件分隔符，或者替换 Windows等价的命令行内置功能。</p>
+<p>需要在 PSCi 交互模式输入的命令会前置一个尖括号：</p>
+<pre class="shell"><code>&gt; 1 + 2
+3</code></pre>
+<p>每一章都会包含习题，会标注它们的困难程度。强烈建议你在完全理解材料内容之后再去尝试做这些习题。</p>
+<p>本书旨在为 PureScript 语言初学者做入门介绍，而不是那种给特定问题提供解答的参考书。 对于初学者，本书应该是一个有趣的挑战，如果你阅读了材料，尝试了习题，最重要的是尝试写了一些你自己的代码，那么你将会得到最大的收获。</p>
+<h4 id="获取帮助">1.7 获取帮助</h4>
+<p>如果你被任何知识点卡住了，这里有很多网上资源能帮你学习 PureScript：</p>
+<ul>
+<li>PureScript IRC频道是你可以交流问题最好的去处。将你的 IRC客户端 指到 irc.freenode.net，加入 #purescript 频道。</li>
+<li><a href="http://purescript.org/">PureScript网站</a> 包含了一些代码，视频，和其他面向初学者的学习资料的链接。</li>
+<li><a href="https://github.com/purescript/documentation">PureScript文档</a> 收集了 PureScript 开发者和用户写的涵盖大量主题的文章和示例。</li>
+<li><a href="http://try.purescript.org/">Try PureScript!</a> 是一个允许用户在线编译 PureScript 代码的网站，同时也包含了一些简单的代码示例。</li>
+<li><a href="http://pursuit.purescript.org/">Pursuit</a> 是一个检索 PureScript 类型和函数的数据库。</li>
+</ul>
+<p>如果你愿意通过阅读示例来学习， <em>purescript</em>, <em>purescript-node</em>, <em>purescript-contrib</em> GitHub组织包含了大量的 PureScript 示例代码。</p>
+<h4 id="关于作者">1.8 关于作者</h4>
+<p>我是 PureScript编译器 最初的开发者。居住在 Los Angeles, Californiz, 很早就开始在8位个人电脑(Amstrad CPC)上开始BASIC编程。 之后专职用很多编程语言工作（包括Java，Scala，C#，F#，Haskell 和 PureScript）。</p>
+<p>在我开始职业生涯不久，我开始喜欢上函数式编程和它与数学的联系，并且十分享受用 Haskell 学习函数式概念。</p>
+<p>我开始 PureScript编译器 相关的工作，主要是受 JavaScript 体验的影响。 我发现自己一直使用从 Haskell 之类的语言中获取的函数式编程技术，但是更加希望在一个 基础<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a> 的场合去使用它们。 那时的解决办法是在保留语义的前提下，将 Haskell 编译到 JavaScript（这类尝试有 Fay，Haste，GHCJS），但是我更感兴趣的是是否可以通过另一面处理这个问题 - 尝试保留 JavaScript 的语义，同时享受像 Haskell 之类语言的语法和类型系统。</p>
+<p>我有一个 <a href="http://blog.functorial.com/">博客</a>，也可以在 <a href="http://twitter.com/paf31">Twitter</a> 上联系我</p>
+<h4 id="感谢">1.9 感谢</h4>
+<p>我想感谢所有帮助 PureScript 进步的贡献者。 如果没有这些在编译器，工具，库，文档和测试上的集体的努力，这个项目一定会失败。</p>
+<p>PureScript 的出现在本书封面的 logo 由 Gareth Hughes创作，基于 <a href="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 license</a> 条款，十分感谢能在这里使用。</p>
+<p>最后，我想感谢所有给了我关于本书反馈和更正的人。</p>
+<h3 id="开始">2. 开始</h3>
+<p><未完待续></p>
+<section class="footnotes">
+<hr />
+<ol>
+<li id="fn1"><p>原文是: … not only a means of gaining confidence in the correctness of your programs, but also an aid to development in their own right.<a href="#fnref1" class="footnote-back">↩</a></p></li>
+<li id="fn2"><p>原文是: Polyglot Web Programming<a href="#fnref2" class="footnote-back">↩</a></p></li>
+<li id="fn3"><p>原文是: principled environment, 结合下文应该是 基础性的，一般性，更通用的场合<a href="#fnref3" class="footnote-back">↩</a></p></li>
+</ol>
+</section>
+</div>
+<div id="footer">Powered by
+<a href="http://jaspervdj.be/hakyll">Hakyll</a>
+<a href="../../../atom.xml" style="text-decoration:none;"><img alt="atom" src="../../../assets/images/feed.svg" style="width:13px;position:relative;top:2px;">
+</a>
+<a href="https://github.com/uuhan" target="blank" style="text-decoration:none;"><img alt="github" src="../../../assets/images/github.svg" style="width:14px;position:relative;top:2px;">
+</a>
+</div>
+</div>
+</body>
+</html>
