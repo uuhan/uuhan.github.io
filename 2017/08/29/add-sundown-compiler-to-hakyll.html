@@ -33,7 +33,7 @@
     
 </div>
 
-<p><a href="https://jaspervdj.be/hakyll/">Hakyll</a> 是一个静态博客工具库<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>，得益于Haskell强大的生态和简洁健壮的代码风格，可以轻松地制作出功能强大的博客生成器。</p>
+<div id="toc"></div><p><a href="https://jaspervdj.be/hakyll/">Hakyll</a> 是一个静态博客工具库<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>，得益于Haskell强大的生态和简洁健壮的代码风格，可以轻松地制作出功能强大的博客生成器。</p>
 <p><a href="https://github.com/vmg/sundown">Sundown</a> 是C语言实现， 号称是 <strong>忠于标准</strong>，<strong>快速</strong>，<strong>安全</strong> 的, 用来渲染Markdown到Html代码的工具库。</p>
 <p>Hakyll默认提供了很多编译器<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>(<a href="https://hackage.haskell.org/package/hakyll-4.9.8.0/docs/Hakyll-Core-File.html#v:copyFileCompiler">copyFileCompiler</a>, <a href="https://hackage.haskell.org/package/hakyll-4.9.8.0/docs/Hakyll-Web-Pandoc.html#v:pandocCompiler">pandocCompiler</a>…), 本文通过将sundown作为编译器整合进hakyll来了解如何给hakyll添加自定义的编译函数。</p>
 <p>我们需要以下的函数：</p>

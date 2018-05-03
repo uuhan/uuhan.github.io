@@ -33,7 +33,11 @@
     
 </div>
 
-<h3 id="什么是webassembly0">什么是WebAssembly<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>?</h3>
+<div id="toc"><ul>
+<li><a href="#什么是webassembly0">什么是WebAssembly?</a></li>
+<li><a href="#如何使用webassembly">如何使用WebAssembly?</a></li>
+<li><a href="#演示实例">演示实例</a></li>
+</ul></div><h3 id="什么是webassembly0">什么是WebAssembly<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>?</h3>
 <p>WebAssembly是浏览器里的汇编语言，它本身有 <strong>二进制</strong> 和 <strong>文本</strong><a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> 两种表达方式，类似于机器码和汇编代码。 同时很多通用编程语言，比如<strong>C/C++</strong>,<strong>Rust</strong>,<strong>TypeScript</strong>都可以编译到wasm。</p>
 <p>wasm具有近乎原生的执行效率，所以在比较耗时的前端任务，比如 <strong>WebGL</strong> 动画，加解密，核心算法实现等方面可以带来一定的性能提升。 同时其二进制的文件格式，也能一定程度上起到保护前端代码的作用<a href="#fn3" class="footnote-ref" id="fnref3"><sup>3</sup></a>。</p>
 <p>处于安全方面的考虑，wasm中的代码访问的内存空间比较特殊。 代码不直接访问系统分配的内存，而是映射到js的一个ArrayBuffer对象中。</p>

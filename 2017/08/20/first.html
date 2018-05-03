@@ -33,14 +33,19 @@
     
 </div>
 
-<h2 id="javascript">Javascript</h2>
+<div id="toc"><ul>
+<li><a href="#javascript">Javascript</a><ul>
+<li><a href="#references">References</a></li>
+</ul></li>
+</ul></div><h2 id="javascript">Javascript</h2>
 <div class="sourceCode" id="cb1"><pre class="sourceCode numberSource javascript numberLines"><code class="sourceCode javascript"><a class="sourceLine" id="cb1-1" data-line-number="1"><span class="kw">let</span> obj <span class="op">=</span> <span class="op">{</span></a>
 <a class="sourceLine" id="cb1-2" data-line-number="2">    <span class="dt">info</span><span class="op">:</span> <span class="dv">1</span><span class="op">,</span></a>
 <a class="sourceLine" id="cb1-3" data-line-number="3">    <span class="kw">function</span> <span class="at">cat</span>()<span class="op">{</span></a>
 <a class="sourceLine" id="cb1-4" data-line-number="4">        <span class="va">console</span>.<span class="at">log</span>(<span class="kw">this</span>.<span class="at">info</span>)<span class="op">;</span></a>
 <a class="sourceLine" id="cb1-5" data-line-number="5">    <span class="op">}</span></a>
 <a class="sourceLine" id="cb1-6" data-line-number="6"><span class="op">}</span></a></code></pre></div>
-<p><img width="154" alt="x=\frac{-b\pm\sqrt{b^2-4ac}}{2a}" height="38" src="data:image/png;base64,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" class="display-math" style="margin:0; vertical-align:-12px;" /> This is<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> reference <span class="citation" data-cites="Nipkow">[Nipkow et al. 2002]</span></p>
+<p><strong><em>Error:</em>IO Exception:<br />
+<code>convert: readCreateProcessWithExitCode: runInteractiveProcess: exec: does not exist (No such file or directory)</code></strong> This is<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> reference <span class="citation" data-cites="Nipkow">[Nipkow et al. 2002]</span></p>
 <h4 id="references" class="unnumbered">References</h4>
 <div id="refs" class="references">
 <div id="ref-Nipkow">
