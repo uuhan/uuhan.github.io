@@ -1,0 +1,588 @@
+<style>
+  .ball-wasm-lite {
+    text-align: left;
+  }
+
+  .ball-wasm-lite .meta {
+    margin: 0 0 18px;
+    color: #555;
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .ball-wasm-lite .summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 36px;
+    margin: 0 0 18px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .ball-wasm-lite .badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 72px;
+    height: 28px;
+    padding: 0 10px;
+    border-radius: 6px;
+    background: #e8edf5;
+    color: #344154;
+    font-size: 13px;
+  }
+
+  .ball-wasm-lite .badge.pass,
+  .ball-wasm-lite .status.pass {
+    background: #dff3e7;
+    color: #176136;
+  }
+
+  .ball-wasm-lite .badge.fail,
+  .ball-wasm-lite .status.fail {
+    background: #fde5e2;
+    color: #9f271c;
+  }
+
+  .ball-wasm-lite .playground,
+  .ball-wasm-lite .case {
+    border: 1px solid #d9dee7;
+    background: #fff;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .ball-wasm-lite .playground {
+    margin-bottom: 18px;
+  }
+
+  .ball-wasm-lite .playground-form {
+    display: grid;
+    grid-template-columns: minmax(220px, 1fr) minmax(150px, 210px) auto;
+    gap: 10px;
+    padding: 12px;
+    border-bottom: 1px solid #e7ebf1;
+    align-items: end;
+  }
+
+  .ball-wasm-lite .field {
+    display: grid;
+    gap: 5px;
+    min-width: 0;
+  }
+
+  .ball-wasm-lite .field label {
+    color: #555;
+    font-size: 12px;
+    font-weight: 650;
+  }
+
+  .ball-wasm-lite input,
+  .ball-wasm-lite select,
+  .ball-wasm-lite button {
+    box-sizing: border-box;
+    height: 34px;
+    border: 1px solid #cbd3df;
+    border-radius: 6px;
+    background: #fff;
+    color: #171a1f;
+    font: inherit;
+    font-size: 13px;
+  }
+
+  .ball-wasm-lite input,
+  .ball-wasm-lite select {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .ball-wasm-lite button {
+    padding: 0 14px;
+    background: #1f6feb;
+    border-color: #1f6feb;
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .ball-wasm-lite button:active {
+    transform: translateY(1px);
+  }
+
+  .ball-wasm-lite .bounds {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(72px, 1fr));
+    gap: 10px;
+    padding: 0 12px 12px;
+    border-bottom: 1px solid #e7ebf1;
+  }
+
+  .ball-wasm-lite .playground-body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+  }
+
+  .ball-wasm-lite canvas {
+    display: block;
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: #fff;
+  }
+
+  .ball-wasm-lite .playground-body canvas {
+    border-right: 1px solid #e7ebf1;
+  }
+
+  .ball-wasm-lite pre {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 9px 12px 12px;
+    min-height: 48px;
+    border-top: 1px solid #e7ebf1;
+    overflow: auto;
+    color: #555;
+    font-size: 12px;
+    line-height: 1.45;
+    white-space: pre-wrap;
+  }
+
+  .ball-wasm-lite .playground-body pre {
+    border-top: 0;
+    max-height: 400px;
+  }
+
+  .ball-wasm-lite .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+  }
+
+  .ball-wasm-lite .case header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border-bottom: 1px solid #e7ebf1;
+  }
+
+  .ball-wasm-lite .name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 13px;
+    font-weight: 650;
+  }
+
+  .ball-wasm-lite .status {
+    flex: 0 0 auto;
+    min-width: 48px;
+    text-align: center;
+    border-radius: 999px;
+    padding: 3px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #e8edf5;
+    color: #344154;
+  }
+
+  .ball-wasm-lite .error {
+    padding: 14px 16px;
+    border: 1px solid #f0c4bd;
+    background: #fff2f0;
+    border-radius: 6px;
+    color: #7f241b;
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .ball-wasm-lite code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 12px;
+  }
+
+  @media (max-width: 760px) {
+    .ball-wasm-lite .playground-form,
+    .ball-wasm-lite .playground-body {
+      grid-template-columns: 1fr;
+    }
+
+    .ball-wasm-lite .bounds {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .ball-wasm-lite .playground-body canvas {
+      border-right: 0;
+      border-bottom: 1px solid #e7ebf1;
+    }
+  }
+</style>
+
+<section class="ball-wasm-lite">
+  <p class="meta">
+    这个页面把 ball 项目的 wasm-lite 数学曲线渲染子集嵌入到博客中，顶部可以输入公式并直接查看 Canvas 输出。
+  </p>
+
+  <section class="playground">
+    <form class="playground-form" id="formulaForm">
+      <div class="field">
+        <label for="formulaInput">Formula</label>
+        <input id="formulaInput" name="formula" value="y = sin(x)" autocomplete="off" spellcheck="false">
+      </div>
+      <div class="field">
+        <label for="exampleSelect">Example</label>
+        <select id="exampleSelect" name="example"></select>
+      </div>
+      <button type="submit">Render</button>
+    </form>
+
+    <div class="bounds">
+      <div class="field">
+        <label for="xminInput">xmin</label>
+        <input id="xminInput" type="number" step="any" value="-6.5">
+      </div>
+      <div class="field">
+        <label for="xmaxInput">xmax</label>
+        <input id="xmaxInput" type="number" step="any" value="6.5">
+      </div>
+      <div class="field">
+        <label for="yminInput">ymin</label>
+        <input id="yminInput" type="number" step="any" value="-1.5">
+      </div>
+      <div class="field">
+        <label for="ymaxInput">ymax</label>
+        <input id="ymaxInput" type="number" step="any" value="1.5">
+      </div>
+    </div>
+
+    <div class="playground-body">
+      <canvas id="interactiveCanvas" width="640" height="400"></canvas>
+      <pre id="interactiveDetail">Loading wasm module...</pre>
+    </div>
+  </section>
+
+  <div class="summary" id="summary">
+    <span class="badge" id="resultBadge">pending</span>
+    <span id="resultText">Loading wasm module...</span>
+  </div>
+
+  <section class="grid" id="cases"></section>
+</section>
+
+<script type="module">
+  const WIDTH = 320;
+  const HEIGHT = 200;
+  const INTERACTIVE_WIDTH = 640;
+  const INTERACTIVE_HEIGHT = 400;
+  const EXAMPLES = [
+    {
+      name: "sin curve",
+      expression: "y = sin(x)",
+      bounds: [-6.5, 6.5, -1.5, 1.5],
+    },
+    {
+      name: "implicit circle",
+      expression: "x^2 + y^2 = 1",
+      bounds: [-1.5, 1.5, -1.5, 1.5],
+    },
+    {
+      name: "parametric circle",
+      expression: "x = cos(t) && y = sin(t)",
+      bounds: [-1.5, 1.5, -1.5, 1.5],
+    },
+    {
+      name: "lissajous",
+      expression: "x = sin(3*t) && y = sin(2*t)",
+      bounds: [-1.25, 1.25, -1.25, 1.25],
+    },
+    {
+      name: "x as function of y",
+      expression: "x = y^2 - 1",
+      bounds: [-1.5, 5.0, -2.5, 2.5],
+    },
+    {
+      name: "function mix",
+      expression: "y = min(max(tanh(x) + asinh(x)/6, -1), 1)",
+      bounds: [-4.0, 4.0, -1.4, 1.4],
+    },
+  ];
+  const TESTS = [
+    {
+      name: "explicit y = sin(x)",
+      expression: "y = sin(x)",
+      bounds: [-6.5, 6.5, -1.5, 1.5],
+      minInk: 120,
+    },
+    {
+      name: "bare explicit cos(x)",
+      expression: "cos(x)",
+      bounds: [-6.5, 6.5, -1.5, 1.5],
+      minInk: 120,
+    },
+    {
+      name: "explicit x = y^2 - 1",
+      expression: "x = y^2 - 1",
+      bounds: [-1.5, 5.0, -2.5, 2.5],
+      minInk: 120,
+    },
+    {
+      name: "implicit circle",
+      expression: "x^2 + y^2 = 1",
+      bounds: [-1.5, 1.5, -1.5, 1.5],
+      minInk: 160,
+    },
+    {
+      name: "implicit folium-style cubic",
+      expression: "x^3 + y^3 = 3*x*y",
+      bounds: [-2.0, 2.0, -2.0, 2.0],
+      minInk: 120,
+    },
+    {
+      name: "parametric circle",
+      expression: "x = cos(t) && y = sin(t)",
+      bounds: [-1.5, 1.5, -1.5, 1.5],
+      minInk: 160,
+    },
+    {
+      name: "parametric lissajous",
+      expression: "x = sin(3*t) && y = sin(2*t)",
+      bounds: [-1.25, 1.25, -1.25, 1.25],
+      minInk: 200,
+    },
+    {
+      name: "f64 function mix",
+      expression: "y = min(max(tanh(x) + asinh(x)/6, -1), 1)",
+      bounds: [-4.0, 4.0, -1.4, 1.4],
+      minInk: 120,
+    },
+    {
+      name: "sqrt abs pow",
+      expression: "y = sqrt(abs(x)) - 0.25*x^2",
+      bounds: [-3.0, 3.0, -2.0, 2.0],
+      minInk: 120,
+    },
+    {
+      name: "atan2 and pi constant",
+      expression: "y = atan2(sin(x), cos(x)) / pi",
+      bounds: [-6.5, 6.5, -1.2, 1.2],
+      minInk: 100,
+    },
+    {
+      name: "unsupported special function fails",
+      expression: "y = Gamma(x)",
+      expectError: true,
+    },
+    {
+      name: "unsupported inequality fails",
+      expression: "y > sin(x)",
+      expectError: true,
+    },
+  ];
+
+  const casesEl = document.getElementById("cases");
+  const badgeEl = document.getElementById("resultBadge");
+  const textEl = document.getElementById("resultText");
+  const formulaForm = document.getElementById("formulaForm");
+  const formulaInput = document.getElementById("formulaInput");
+  const exampleSelect = document.getElementById("exampleSelect");
+  const xminInput = document.getElementById("xminInput");
+  const xmaxInput = document.getElementById("xmaxInput");
+  const yminInput = document.getElementById("yminInput");
+  const ymaxInput = document.getElementById("ymaxInput");
+  const interactiveCanvas = document.getElementById("interactiveCanvas");
+  const interactiveDetail = document.getElementById("interactiveDetail");
+
+  function setSummary(kind, text) {
+    badgeEl.className = `badge ${kind}`;
+    badgeEl.textContent = kind || "pending";
+    textEl.textContent = text;
+  }
+
+  function renderCaseShell(test) {
+    const article = document.createElement("article");
+    article.className = "case";
+    article.innerHTML = `
+      <header>
+        <div class="name"></div>
+        <div class="status">run</div>
+      </header>
+      <canvas width="${WIDTH}" height="${HEIGHT}"></canvas>
+      <pre></pre>
+    `;
+    article.querySelector(".name").textContent = test.name;
+    casesEl.appendChild(article);
+    return {
+      status: article.querySelector(".status"),
+      canvas: article.querySelector("canvas"),
+      detail: article.querySelector("pre"),
+    };
+  }
+
+  function countInk(rgba) {
+    let ink = 0;
+    for (let i = 0; i < rgba.length; i += 4) {
+      if (rgba[i] !== 255 || rgba[i + 1] !== 255 || rgba[i + 2] !== 255) {
+        ink++;
+      }
+    }
+    return ink;
+  }
+
+  function putImage(canvas, rgba, width = WIDTH, height = HEIGHT) {
+    const ctx = canvas.getContext("2d");
+    ctx.putImageData(new ImageData(new Uint8ClampedArray(rgba), width, height), 0, 0);
+  }
+
+  function pass(shell, detail) {
+    shell.status.className = "status pass";
+    shell.status.textContent = "pass";
+    shell.detail.textContent = detail;
+    return true;
+  }
+
+  function fail(shell, detail) {
+    shell.status.className = "status fail";
+    shell.status.textContent = "fail";
+    shell.detail.textContent = detail;
+    return false;
+  }
+
+  function argsFor(test) {
+    const [xmin, xmax, ymin, ymax] = test.bounds || [-10, 10, -10, 10];
+    return [test.expression, WIDTH, HEIGHT, xmin, xmax, ymin, ymax, 1.6];
+  }
+
+  function setupExamples() {
+    exampleSelect.innerHTML = "";
+    for (const example of EXAMPLES) {
+      const option = document.createElement("option");
+      option.value = example.name;
+      option.textContent = example.name;
+      exampleSelect.appendChild(option);
+    }
+    exampleSelect.addEventListener("change", () => {
+      const example = EXAMPLES.find((item) => item.name === exampleSelect.value);
+      if (example) {
+        fillInteractiveForm(example);
+        formulaForm.requestSubmit();
+      }
+    });
+    fillInteractiveForm(EXAMPLES[0]);
+  }
+
+  function fillInteractiveForm(example) {
+    const [xmin, xmax, ymin, ymax] = example.bounds;
+    formulaInput.value = example.expression;
+    xminInput.value = xmin;
+    xmaxInput.value = xmax;
+    yminInput.value = ymin;
+    ymaxInput.value = ymax;
+  }
+
+  function readNumber(input, name) {
+    const value = Number(input.value);
+    if (!Number.isFinite(value)) {
+      throw new Error(`${name} must be finite`);
+    }
+    return value;
+  }
+
+  function renderInteractive(mod) {
+    const expression = formulaInput.value.trim();
+    const xmin = readNumber(xminInput, "xmin");
+    const xmax = readNumber(xmaxInput, "xmax");
+    const ymin = readNumber(yminInput, "ymin");
+    const ymax = readNumber(ymaxInput, "ymax");
+    const rgba = mod.renderRgba(
+      expression,
+      INTERACTIVE_WIDTH,
+      INTERACTIVE_HEIGHT,
+      xmin,
+      xmax,
+      ymin,
+      ymax,
+      1.6,
+    );
+    putImage(interactiveCanvas, rgba, INTERACTIVE_WIDTH, INTERACTIVE_HEIGHT);
+    interactiveDetail.textContent = `ink=${countInk(rgba)}\n${expression}\n[${xmin}, ${xmax}] x [${ymin}, ${ymax}]`;
+  }
+
+  function setupInteractive(mod) {
+    setupExamples();
+    formulaForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      try {
+        renderInteractive(mod);
+      } catch (error) {
+        interactiveDetail.textContent = error.message || String(error);
+      }
+    });
+    try {
+      renderInteractive(mod);
+    } catch (error) {
+      interactiveDetail.textContent = error.message || String(error);
+    }
+  }
+
+  async function main() {
+    let mod;
+    try {
+      mod = await import("./assets/ball-wasm-lite/ball_wasm_lite.js");
+      await mod.default();
+    } catch (error) {
+      setSummary("fail", "Could not load ./assets/ball-wasm-lite/ball_wasm_lite.js");
+      interactiveDetail.textContent = "Could not load ./assets/ball-wasm-lite/ball_wasm_lite.js";
+      casesEl.innerHTML = `
+        <div class="error">
+          The ball wasm-lite assets are missing or the browser could not load the WebAssembly module.
+        </div>
+      `;
+      console.error(error);
+      return;
+    }
+
+    setupInteractive(mod);
+
+    let passed = 0;
+    for (const test of TESTS) {
+      const shell = renderCaseShell(test);
+      try {
+        const rgba = mod.renderRgba(...argsFor(test));
+        if (test.expectError) {
+          fail(shell, `expected an error, rendered ${rgba.length} RGBA bytes`);
+          continue;
+        }
+        if (rgba.length !== WIDTH * HEIGHT * 4) {
+          fail(shell, `wrong buffer length: ${rgba.length}`);
+          continue;
+        }
+        putImage(shell.canvas, rgba);
+        const ink = countInk(rgba);
+        if (ink < test.minInk) {
+          fail(shell, `ink=${ink}, expected at least ${test.minInk}`);
+          continue;
+        }
+        pass(shell, `ink=${ink}\n${test.expression}`);
+        passed++;
+      } catch (error) {
+        if (test.expectError) {
+          pass(shell, `expected error: ${error.message || error}`);
+          passed++;
+        } else {
+          fail(shell, error.message || String(error));
+        }
+      }
+    }
+
+    const total = TESTS.length;
+    if (passed === total) {
+      setSummary("pass", `${passed}/${total} tests passed`);
+    } else {
+      setSummary("fail", `${passed}/${total} tests passed`);
+    }
+  }
+
+  main();
+</script>
