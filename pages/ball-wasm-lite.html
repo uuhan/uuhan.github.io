@@ -125,13 +125,15 @@
 
   .ball-wasm-lite canvas {
     display: block;
-    width: 100%;
-    aspect-ratio: 16 / 10;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
     background: #fff;
   }
 
   .ball-wasm-lite .playground-body canvas {
     border-right: 1px solid #e7ebf1;
+    justify-self: center;
   }
 
   .ball-wasm-lite pre {
@@ -258,7 +260,7 @@
     </div>
 
     <div class="playground-body">
-      <canvas id="interactiveCanvas" width="640" height="400"></canvas>
+      <canvas id="interactiveCanvas" width="640" height="640"></canvas>
       <pre id="interactiveDetail">Loading wasm module...</pre>
     </div>
   </section>
@@ -272,10 +274,9 @@
 </section>
 
 <script type="module">
-  const WIDTH = 320;
-  const HEIGHT = 200;
-  const INTERACTIVE_WIDTH = 640;
-  const INTERACTIVE_HEIGHT = 400;
+  const CASE_LONG_SIDE = 320;
+  const INTERACTIVE_LONG_SIDE = 640;
+  const DEFAULT_BOUNDS = [-10, 10, -10, 10];
   const EXAMPLES = [
     {
       name: "sin curve",
@@ -400,7 +401,7 @@
     textEl.textContent = text;
   }
 
-  function renderCaseShell(test) {
+  function renderCaseShell(test, size) {
     const article = document.createElement("article");
     article.className = "case";
     article.innerHTML = `
@@ -408,7 +409,7 @@
         <div class="name"></div>
         <div class="status">run</div>
       </header>
-      <canvas width="${WIDTH}" height="${HEIGHT}"></canvas>
+      <canvas width="${size.width}" height="${size.height}"></canvas>
       <pre></pre>
     `;
     article.querySelector(".name").textContent = test.name;
@@ -430,7 +431,32 @@
     return ink;
   }
 
-  function putImage(canvas, rgba, width = WIDTH, height = HEIGHT) {
+  function renderSizeForBounds(bounds, longSide) {
+    const [xmin, xmax, ymin, ymax] = bounds || DEFAULT_BOUNDS;
+    const xRange = xmax - xmin;
+    const yRange = ymax - ymin;
+    if (!Number.isFinite(xRange) || !Number.isFinite(yRange) || xRange <= 0 || yRange <= 0) {
+      throw new Error("bounds must be finite and increasing");
+    }
+
+    const aspect = xRange / yRange;
+    if (aspect >= 1) {
+      return {
+        width: longSide,
+        height: Math.max(2, Math.round(longSide / aspect)),
+      };
+    }
+
+    return {
+      width: Math.max(2, Math.round(longSide * aspect)),
+      height: longSide,
+    };
+  }
+
+  function putImage(canvas, rgba, size) {
+    const { width, height } = size;
+    canvas.width = width;
+    canvas.height = height;
     const ctx = canvas.getContext("2d");
     ctx.putImageData(new ImageData(new Uint8ClampedArray(rgba), width, height), 0, 0);
   }
@@ -450,8 +476,13 @@
   }
 
   function argsFor(test) {
-    const [xmin, xmax, ymin, ymax] = test.bounds || [-10, 10, -10, 10];
-    return [test.expression, WIDTH, HEIGHT, xmin, xmax, ymin, ymax, 1.6];
+    const bounds = test.bounds || DEFAULT_BOUNDS;
+    const [xmin, xmax, ymin, ymax] = bounds;
+    const size = renderSizeForBounds(bounds, CASE_LONG_SIDE);
+    return {
+      size,
+      args: [test.expression, size.width, size.height, xmin, xmax, ymin, ymax, 1.6],
+    };
   }
 
   function setupExamples() {
@@ -495,18 +526,20 @@
     const xmax = readNumber(xmaxInput, "xmax");
     const ymin = readNumber(yminInput, "ymin");
     const ymax = readNumber(ymaxInput, "ymax");
+    const bounds = [xmin, xmax, ymin, ymax];
+    const size = renderSizeForBounds(bounds, INTERACTIVE_LONG_SIDE);
     const rgba = mod.renderRgba(
       expression,
-      INTERACTIVE_WIDTH,
-      INTERACTIVE_HEIGHT,
+      size.width,
+      size.height,
       xmin,
       xmax,
       ymin,
       ymax,
       1.6,
     );
-    putImage(interactiveCanvas, rgba, INTERACTIVE_WIDTH, INTERACTIVE_HEIGHT);
-    interactiveDetail.textContent = `ink=${countInk(rgba)}\n${expression}\n[${xmin}, ${xmax}] x [${ymin}, ${ymax}]`;
+    putImage(interactiveCanvas, rgba, size);
+    interactiveDetail.textContent = `ink=${countInk(rgba)}\nsize=${size.width}x${size.height}\n${expression}\n[${xmin}, ${xmax}] x [${ymin}, ${ymax}]`;
   }
 
   function setupInteractive(mod) {
@@ -547,18 +580,19 @@
 
     let passed = 0;
     for (const test of TESTS) {
-      const shell = renderCaseShell(test);
+      const { size, args } = argsFor(test);
+      const shell = renderCaseShell(test, size);
       try {
-        const rgba = mod.renderRgba(...argsFor(test));
+        const rgba = mod.renderRgba(...args);
         if (test.expectError) {
           fail(shell, `expected an error, rendered ${rgba.length} RGBA bytes`);
           continue;
         }
-        if (rgba.length !== WIDTH * HEIGHT * 4) {
+        if (rgba.length !== size.width * size.height * 4) {
           fail(shell, `wrong buffer length: ${rgba.length}`);
           continue;
         }
-        putImage(shell.canvas, rgba);
+        putImage(shell.canvas, rgba, size);
         const ink = countInk(rgba);
         if (ink < test.minInk) {
           fail(shell, `ink=${ink}, expected at least ${test.minInk}`);
