@@ -4,6 +4,40 @@
  * @param {string} expression
  * @param {number} width
  * @param {number} height
+ * @param {number} eye_x
+ * @param {number} eye_y
+ * @param {number} eye_z
+ * @param {number} center_x
+ * @param {number} center_y
+ * @param {number} center_z
+ * @param {number} fov_y_degrees
+ * @param {number} t_near
+ * @param {number} t_far
+ * @param {number} param_t_min
+ * @param {number} param_t_max
+ * @param {number} curve_samples
+ * @param {number} curve_line_width_px
+ * @param {string} projection
+ * @returns {Uint8Array}
+ */
+export function render3dRgba(expression, width, height, eye_x, eye_y, eye_z, center_x, center_y, center_z, fov_y_degrees, t_near, t_far, param_t_min, param_t_max, curve_samples, curve_line_width_px, projection) {
+    const ptr0 = passStringToWasm0(expression, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len0 = WASM_VECTOR_LEN;
+    const ptr1 = passStringToWasm0(projection, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+    const len1 = WASM_VECTOR_LEN;
+    const ret = wasm.render3dRgba(ptr0, len0, width, height, eye_x, eye_y, eye_z, center_x, center_y, center_z, fov_y_degrees, t_near, t_far, param_t_min, param_t_max, curve_samples, curve_line_width_px, ptr1, len1);
+    if (ret[3]) {
+        throw takeFromExternrefTable0(ret[2]);
+    }
+    var v3 = getArrayU8FromWasm0(ret[0], ret[1]).slice();
+    wasm.__wbindgen_free(ret[0], ret[1] * 1, 1);
+    return v3;
+}
+
+/**
+ * @param {string} expression
+ * @param {number} width
+ * @param {number} height
  * @param {number} xmin
  * @param {number} xmax
  * @param {number} ymin

@@ -59,7 +59,7 @@
 
   .ball-wasm-lite .playground-form {
     display: grid;
-    grid-template-columns: minmax(220px, 1fr) minmax(150px, 210px) auto;
+    grid-template-columns: minmax(220px, 1fr) minmax(90px, 130px) minmax(150px, 210px) auto;
     gap: 10px;
     padding: 12px;
     border-bottom: 1px solid #e7ebf1;
@@ -118,9 +118,13 @@
     border-bottom: 1px solid #e7ebf1;
   }
 
+  .ball-wasm-lite .hidden {
+    display: none;
+  }
+
   .ball-wasm-lite .playground-body {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(190px, 240px);
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 280px);
   }
 
   .ball-wasm-lite canvas {
@@ -151,6 +155,7 @@
 
   .ball-wasm-lite .playground-body pre {
     border-top: 0;
+    min-height: 0;
     max-height: 400px;
   }
 
@@ -224,7 +229,7 @@
 
 <section class="ball-wasm-lite">
   <p class="meta">
-    这个页面把 ball 项目的 wasm-lite 数学曲线渲染子集嵌入到博客中，顶部可以输入公式并直接查看 Canvas 输出。
+    这个页面把 ball 项目的 wasm-lite 数学绘图子集嵌入到博客中，顶部可以输入公式并直接查看 2D / 3D Canvas 输出。
   </p>
 
   <section class="playground">
@@ -234,13 +239,20 @@
         <input id="formulaInput" name="formula" value="y = sin(x)" autocomplete="off" spellcheck="false">
       </div>
       <div class="field">
+        <label for="dimensionSelect">Mode</label>
+        <select id="dimensionSelect" name="dimension">
+          <option value="2d">2D</option>
+          <option value="3d">3D</option>
+        </select>
+      </div>
+      <div class="field">
         <label for="exampleSelect">Example</label>
         <select id="exampleSelect" name="example"></select>
       </div>
       <button type="submit">Render</button>
     </form>
 
-    <div class="bounds">
+    <div class="bounds" id="bounds2d">
       <div class="field">
         <label for="xminInput">xmin</label>
         <input id="xminInput" type="number" step="any" value="-6.5">
@@ -256,6 +268,30 @@
       <div class="field">
         <label for="ymaxInput">ymax</label>
         <input id="ymaxInput" type="number" step="any" value="1.5">
+      </div>
+    </div>
+
+    <div class="bounds hidden" id="controls3d">
+      <div class="field">
+        <label for="tminInput">t min</label>
+        <input id="tminInput" type="number" step="any" value="-1.25">
+      </div>
+      <div class="field">
+        <label for="tmaxInput">t max</label>
+        <input id="tmaxInput" type="number" step="any" value="1.25">
+      </div>
+      <div class="field">
+        <label for="projectionSelect">Projection</label>
+        <select id="projectionSelect">
+          <option value="">camera</option>
+          <option value="xy">xy</option>
+          <option value="yz">yz</option>
+          <option value="zx">zx</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="lineWidthInput">line px</label>
+        <input id="lineWidthInput" type="number" step="any" min="0.5" value="1.4">
       </div>
     </div>
 
@@ -276,107 +312,193 @@
 <script type="module">
   const CASE_LONG_SIDE = 320;
   const INTERACTIVE_LONG_SIDE = 640;
+  const INTERACTIVE_3D_LONG_SIDE = 480;
   const DEFAULT_BOUNDS = [-10, 10, -10, 10];
+  const DEFAULT_3D = {
+    eye: [3.0, 2.1, 3.8],
+    center: [0.0, 0.4, 0.0],
+    fov: 50,
+    tNear: 0.01,
+    tFar: 12.0,
+    tRange: [-1.25, 1.25],
+    curveSamples: 768,
+    lineWidth: 1.4,
+    projection: "",
+  };
   const EXAMPLES = [
     {
       name: "sin curve",
+      kind: "2d",
       expression: "y = sin(x)",
       bounds: [-6.5, 6.5, -1.5, 1.5],
     },
     {
       name: "implicit circle",
+      kind: "2d",
       expression: "x^2 + y^2 = 1",
       bounds: [-1.5, 1.5, -1.5, 1.5],
     },
     {
       name: "parametric circle",
+      kind: "2d",
       expression: "x = cos(t) && y = sin(t)",
       bounds: [-1.5, 1.5, -1.5, 1.5],
     },
     {
       name: "lissajous",
+      kind: "2d",
       expression: "x = sin(3*t) && y = sin(2*t)",
       bounds: [-1.25, 1.25, -1.25, 1.25],
     },
     {
       name: "x as function of y",
+      kind: "2d",
       expression: "x = y^2 - 1",
       bounds: [-1.5, 5.0, -2.5, 2.5],
     },
     {
       name: "function mix",
+      kind: "2d",
       expression: "y = min(max(tanh(x) + asinh(x)/6, -1), 1)",
       bounds: [-4.0, 4.0, -1.4, 1.4],
+    },
+    {
+      name: "3D sphere",
+      kind: "3d",
+      expression: "x^2 + y^2 + z^2 = 1",
+      camera: { eye: [3.0, 1.7, 3.5], center: [0.0, 0.0, 0.0], fov: 45, tFar: 10.0 },
+    },
+    {
+      name: "3D torus",
+      kind: "3d",
+      expression: "(sqrt(x^2 + y^2) - 1)^2 + z^2 = 0.18^2",
+      camera: { eye: [2.7, 1.8, 3.3], center: [0.0, 0.0, 0.0], fov: 45, tFar: 10.0 },
+    },
+    {
+      name: "twisted cubic 3D",
+      kind: "3d",
+      expression: "x = t && y = t^2 && z = t^3",
+      tRange: [-1.25, 1.25],
+      camera: { eye: [2.0, 1.4, 2.5], center: [0.0, 0.55, 0.0], fov: 32, tFar: 8.0 },
+    },
+    {
+      name: "twisted cubic xy",
+      kind: "3d",
+      expression: "x = t && y = t^2 && z = t^3",
+      tRange: [-1.25, 1.25],
+      projection: "xy",
     },
   ];
   const TESTS = [
     {
       name: "explicit y = sin(x)",
+      kind: "2d",
       expression: "y = sin(x)",
       bounds: [-6.5, 6.5, -1.5, 1.5],
       minInk: 120,
     },
     {
       name: "bare explicit cos(x)",
+      kind: "2d",
       expression: "cos(x)",
       bounds: [-6.5, 6.5, -1.5, 1.5],
       minInk: 120,
     },
     {
       name: "explicit x = y^2 - 1",
+      kind: "2d",
       expression: "x = y^2 - 1",
       bounds: [-1.5, 5.0, -2.5, 2.5],
       minInk: 120,
     },
     {
       name: "implicit circle",
+      kind: "2d",
       expression: "x^2 + y^2 = 1",
       bounds: [-1.5, 1.5, -1.5, 1.5],
       minInk: 160,
     },
     {
       name: "implicit folium-style cubic",
+      kind: "2d",
       expression: "x^3 + y^3 = 3*x*y",
       bounds: [-2.0, 2.0, -2.0, 2.0],
       minInk: 120,
     },
     {
       name: "parametric circle",
+      kind: "2d",
       expression: "x = cos(t) && y = sin(t)",
       bounds: [-1.5, 1.5, -1.5, 1.5],
       minInk: 160,
     },
     {
       name: "parametric lissajous",
+      kind: "2d",
       expression: "x = sin(3*t) && y = sin(2*t)",
       bounds: [-1.25, 1.25, -1.25, 1.25],
       minInk: 200,
     },
     {
       name: "f64 function mix",
+      kind: "2d",
       expression: "y = min(max(tanh(x) + asinh(x)/6, -1), 1)",
       bounds: [-4.0, 4.0, -1.4, 1.4],
       minInk: 120,
     },
     {
       name: "sqrt abs pow",
+      kind: "2d",
       expression: "y = sqrt(abs(x)) - 0.25*x^2",
       bounds: [-3.0, 3.0, -2.0, 2.0],
       minInk: 120,
     },
     {
       name: "atan2 and pi constant",
+      kind: "2d",
       expression: "y = atan2(sin(x), cos(x)) / pi",
       bounds: [-6.5, 6.5, -1.2, 1.2],
       minInk: 100,
     },
     {
+      name: "3D sphere surface",
+      kind: "3d",
+      expression: "x^2 + y^2 + z^2 = 1",
+      camera: { eye: [3.0, 1.7, 3.5], center: [0.0, 0.0, 0.0], fov: 45, tFar: 10.0 },
+      minInk: 500,
+    },
+    {
+      name: "3D torus surface",
+      kind: "3d",
+      expression: "(sqrt(x^2 + y^2) - 1)^2 + z^2 = 0.18^2",
+      camera: { eye: [2.7, 1.8, 3.3], center: [0.0, 0.0, 0.0], fov: 45, tFar: 10.0 },
+      minInk: 160,
+    },
+    {
+      name: "3D twisted cubic camera",
+      kind: "3d",
+      expression: "x = t && y = t^2 && z = t^3",
+      tRange: [-1.25, 1.25],
+      camera: { eye: [2.0, 1.4, 2.5], center: [0.0, 0.55, 0.0], fov: 32, tFar: 8.0 },
+      minInk: 80,
+    },
+    {
+      name: "3D twisted cubic xy projection",
+      kind: "3d",
+      expression: "x = t && y = t^2 && z = t^3",
+      tRange: [-1.25, 1.25],
+      projection: "xy",
+      minInk: 120,
+    },
+    {
       name: "unsupported special function fails",
+      kind: "2d",
       expression: "y = Gamma(x)",
       expectError: true,
     },
     {
       name: "unsupported inequality fails",
+      kind: "2d",
       expression: "y > sin(x)",
       expectError: true,
     },
@@ -387,11 +509,18 @@
   const textEl = document.getElementById("resultText");
   const formulaForm = document.getElementById("formulaForm");
   const formulaInput = document.getElementById("formulaInput");
+  const dimensionSelect = document.getElementById("dimensionSelect");
   const exampleSelect = document.getElementById("exampleSelect");
+  const bounds2d = document.getElementById("bounds2d");
+  const controls3d = document.getElementById("controls3d");
   const xminInput = document.getElementById("xminInput");
   const xmaxInput = document.getElementById("xmaxInput");
   const yminInput = document.getElementById("yminInput");
   const ymaxInput = document.getElementById("ymaxInput");
+  const tminInput = document.getElementById("tminInput");
+  const tmaxInput = document.getElementById("tmaxInput");
+  const projectionSelect = document.getElementById("projectionSelect");
+  const lineWidthInput = document.getElementById("lineWidthInput");
   const interactiveCanvas = document.getElementById("interactiveCanvas");
   const interactiveDetail = document.getElementById("interactiveDetail");
 
@@ -485,12 +614,74 @@
     };
   }
 
+  function merge3dConfig(item = {}) {
+    const camera = item.camera || {};
+    const tRange = item.tRange || DEFAULT_3D.tRange;
+    return {
+      eye: camera.eye || DEFAULT_3D.eye,
+      center: camera.center || DEFAULT_3D.center,
+      fov: camera.fov ?? DEFAULT_3D.fov,
+      tNear: camera.tNear ?? DEFAULT_3D.tNear,
+      tFar: camera.tFar ?? DEFAULT_3D.tFar,
+      tRange,
+      curveSamples: item.curveSamples ?? DEFAULT_3D.curveSamples,
+      lineWidth: item.lineWidth ?? DEFAULT_3D.lineWidth,
+      projection: item.projection ?? DEFAULT_3D.projection,
+    };
+  }
+
+  function renderSizeFor3d(longSide) {
+    return {
+      width: longSide,
+      height: Math.round(longSide * 0.75),
+    };
+  }
+
+  function args3dFor(item, size) {
+    const cfg = merge3dConfig(item);
+    return [
+      item.expression,
+      size.width,
+      size.height,
+      cfg.eye[0],
+      cfg.eye[1],
+      cfg.eye[2],
+      cfg.center[0],
+      cfg.center[1],
+      cfg.center[2],
+      cfg.fov,
+      cfg.tNear,
+      cfg.tFar,
+      cfg.tRange[0],
+      cfg.tRange[1],
+      cfg.curveSamples,
+      cfg.lineWidth,
+      cfg.projection,
+    ];
+  }
+
+  function renderTestRgba(mod, test) {
+    if (test.kind === "3d") {
+      const size = renderSizeFor3d(CASE_LONG_SIDE);
+      return {
+        size,
+        rgba: mod.render3dRgba(...args3dFor(test, size)),
+      };
+    }
+
+    const { size, args } = argsFor(test);
+    return {
+      size,
+      rgba: mod.renderRgba(...args),
+    };
+  }
+
   function setupExamples() {
     exampleSelect.innerHTML = "";
     for (const example of EXAMPLES) {
       const option = document.createElement("option");
       option.value = example.name;
-      option.textContent = example.name;
+      option.textContent = `${example.kind.toUpperCase()} · ${example.name}`;
       exampleSelect.appendChild(option);
     }
     exampleSelect.addEventListener("change", () => {
@@ -500,16 +691,33 @@
         formulaForm.requestSubmit();
       }
     });
+    dimensionSelect.addEventListener("change", syncModeControls);
     fillInteractiveForm(EXAMPLES[0]);
   }
 
   function fillInteractiveForm(example) {
-    const [xmin, xmax, ymin, ymax] = example.bounds;
+    dimensionSelect.value = example.kind || "2d";
     formulaInput.value = example.expression;
-    xminInput.value = xmin;
-    xmaxInput.value = xmax;
-    yminInput.value = ymin;
-    ymaxInput.value = ymax;
+    if (example.kind === "3d") {
+      const cfg = merge3dConfig(example);
+      tminInput.value = cfg.tRange[0];
+      tmaxInput.value = cfg.tRange[1];
+      projectionSelect.value = cfg.projection;
+      lineWidthInput.value = cfg.lineWidth;
+    } else {
+      const [xmin, xmax, ymin, ymax] = example.bounds;
+      xminInput.value = xmin;
+      xmaxInput.value = xmax;
+      yminInput.value = ymin;
+      ymaxInput.value = ymax;
+    }
+    syncModeControls();
+  }
+
+  function syncModeControls() {
+    const is3d = dimensionSelect.value === "3d";
+    bounds2d.classList.toggle("hidden", is3d);
+    controls3d.classList.toggle("hidden", !is3d);
   }
 
   function readNumber(input, name) {
@@ -522,6 +730,26 @@
 
   function renderInteractive(mod) {
     const expression = formulaInput.value.trim();
+    if (dimensionSelect.value === "3d") {
+      const selectedExample = EXAMPLES.find((item) => item.name === exampleSelect.value && item.kind === "3d");
+      const base = selectedExample || { kind: "3d", expression };
+      const tMin = readNumber(tminInput, "t min");
+      const tMax = readNumber(tmaxInput, "t max");
+      const lineWidth = readNumber(lineWidthInput, "line px");
+      const item = {
+        ...base,
+        expression,
+        tRange: [tMin, tMax],
+        lineWidth,
+        projection: projectionSelect.value,
+      };
+      const size = renderSizeFor3d(INTERACTIVE_3D_LONG_SIDE);
+      const rgba = mod.render3dRgba(...args3dFor(item, size));
+      putImage(interactiveCanvas, rgba, size);
+      interactiveDetail.textContent = `ink=${countInk(rgba)}\nsize=${size.width}x${size.height}\n${expression}\nt=[${tMin}, ${tMax}]\nprojection=${projectionSelect.value || "camera"}`;
+      return;
+    }
+
     const xmin = readNumber(xminInput, "xmin");
     const xmax = readNumber(xmaxInput, "xmax");
     const ymin = readNumber(yminInput, "ymin");
@@ -580,10 +808,12 @@
 
     let passed = 0;
     for (const test of TESTS) {
-      const { size, args } = argsFor(test);
+      const size = test.kind === "3d"
+        ? renderSizeFor3d(CASE_LONG_SIDE)
+        : renderSizeForBounds(test.bounds || DEFAULT_BOUNDS, CASE_LONG_SIDE);
       const shell = renderCaseShell(test, size);
       try {
-        const rgba = mod.renderRgba(...args);
+        const { rgba } = renderTestRgba(mod, test);
         if (test.expectError) {
           fail(shell, `expected an error, rendered ${rgba.length} RGBA bytes`);
           continue;
